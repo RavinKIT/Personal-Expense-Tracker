@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Expense Tracker</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="header">
+        <h1>PERSONAL EXPENSE TRACKER</h1>
+        <p>Manage your money like a pro</p>
+    </div>
+
+    <div class="summary">
+        <span>TOTAL BALANCE</span>
+        <h2>₹{{ total }}</h2>
+    </div>
+
+    <form method="GET" class="search-box">
+        <input type="text" name="search" placeholder="Search records..." value="{{ search }}">
+        <button type="submit">SCAN</button>
+    </form>
+
+    <form method="POST" class="form-box">
+
+        <input type="hidden" name="edit_index" value="{{ edit_index if edit_data else '' }}">
+
+        <input type="text" name="title" placeholder="Expense Title"
+        value="{{ edit_data[0] if edit_data else '' }}" required>
+
+        <input type="number" name="amount" placeholder="Amount"
+        value="{{ edit_data[1] if edit_data else '' }}" required>
+
+        <select name="category" required>
+            <option value="">Select Category</option>
+            <option value="Food">Food</option>
+            <option value="Travel">Travel</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Bills">Bills</option>
+            <option value="Other">Other</option>
+        </select>
+
+        <input type="date" name="date"
+        value="{{ edit_data[3] if edit_data else '' }}" required>
+
+        <button type="submit">
+            {{ 'UPDATE DATA' if edit_data else 'ADD ENTRY' }}
+        </button>
+
+    </form>
+
+    <h3>DATABASE RECORDS</h3>
+
+    <table>
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+
+        {% for row in expenses %}
+        <tr>
+            <td>{{ row[0] }}</td>
+            <td>₹{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3] }}</td>
+            <td>
+                <a href="/?edit={{ loop.index0 }}">Edit</a>
+                <a href="/delete/{{ loop.index0 }}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+</body>
+</html>
