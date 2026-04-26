@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Register</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="auth-wrapper">
+<div class="auth-card">
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+
+<h1>Create Account</h1>
+<p class="subtitle">Start tracking money smarter today</p>
+
+<form method="POST">
+
+<input
+type="text"
+name="username"
+placeholder="Full Name"
+value="{{ old_name }}"
+required>
+
+<input
+type="email"
+name="email"
+placeholder="Email Address"
+value="{{ old_email }}"
+required>
+
+<input
+type="password"
+name="password"
+placeholder="Create Password"
+required>
+
+{% if error %}
+<p style="color:#dc2626; font-size:14px; text-align:left; margin-top:-4px;">
+{{ error }}
+</p>
+{% endif %}
+
+<button type="submit">Create Account</button>
+
+</form>
+
+<div class="features">
+<p>✔ Personal secure dashboard</p>
+<p>✔ Easy daily expense tracking</p>
+<p>✔ Fast and clean experience</p>
+</div>
+
+<p class="small-text">Already have an account?</p>
+<a href="/login" class="link-btn">Login Here</a>
+
+</div>
+</div>
+
+</body>
+</html>
