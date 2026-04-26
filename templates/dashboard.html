@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+</head>
+<body>
+
+<nav class="topbar">
+    <div class="brand">
+        <img src="{{ url_for('static', filename='logo.png') }}" class="mini-logo">
+        <span>Expense Tracker</span>
+    </div>
+    <a href="/logout" class="logout-btn">Logout</a>
+</nav>
+
+<div class="dashboard-wrap">
+
+<div class="hero">
+<h1>Welcome {{ username }}</h1>
+<p>Manage your finances with clarity</p>
+</div>
+
+<div class="card-row">
+<div class="glass-pill">Net Outflow</div>
+<div class="glass-pill">Monthly Burn</div>
+<div class="glass-pill">Expense Hotspot</div>
+<div class="glass-pill">Cash Discipline</div>
+</div>
+
+<div class="panel white-panel">
+<h2>Add Expense</h2>
+
+<form method="POST">
+<input type="text" name="title" placeholder="Expense Title" required>
+<input type="number" name="amount" placeholder="Amount" required>
+
+<select name="category" required>
+<option value="">Select Category</option>
+<option>Food</option>
+<option>Travel</option>
+<option>Shopping</option>
+<option>Bills</option>
+<option>Other</option>
+</select>
+
+<input type="date" name="date" required>
+
+<button type="submit">Add Expense</button>
+</form>
+</div>
+
+
+<div class="panel glass-panel">
+<h2>Expense Records</h2>
+
+<form method="GET" style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+<input type="text" name="search" placeholder="Search title..." value="{{ search }}" style="flex:1; min-width:220px;">
+
+<select name="sort" style="width:220px;">
+<option value="latest" {% if sort=='latest' %}selected{% endif %}>Latest</option>
+<option value="amount" {% if sort=='amount' %}selected{% endif %}>Amount High-Low</option>
+<option value="category" {% if sort=='category' %}selected{% endif %}>Category A-Z</option>
+</select>
+
+<button type="submit">Apply</button>
+</form>
+
+<table>
+<tr>
+<th>S.No</th>
+<th>Title</th>
+<th>Amount</th>
+<th>Category</th>
+<th>Date</th>
+<th>Action</th>
+</tr>
+
+{% for row in expenses %}
+<tr>
+<td>{{ loop.index }}</td>
+<td>{{ row[2] }}</td>
+<td>₹{{ row[3] }}</td>
+<td>{{ row[4] }}</td>
+<td>{{ row[5] }}</td>
+<td>
+<a href="/delete/{{ row[0] }}"
+onclick="return confirm('Delete this expense?')"
+style="color:red; text-decoration:none; font-weight:bold;">
+Delete
+</a>
+</td>
+</tr>
+{% endfor %}
+
+</table>
+</div>
+
+</div>
+</body>
+</html>
