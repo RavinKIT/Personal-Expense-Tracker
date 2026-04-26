@@ -1,91 +1,264 @@
-from flask import Flask, render_template, request, redirect
-import csv
-import os
+from flask import Flask, render_template, request, redirect, session
+import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "supersecretkey"
 
-FILE_NAME = "expenses.csv"
 
-if not os.path.exists(FILE_NAME):
-    with open(FILE_NAME, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Title", "Amount", "Category", "Date"])
+def init_db():
+    conn = sqlite3.connect("database.db")
+    cur = conn.cursor()
 
-@app.route("/", methods=["GET", "POST"])
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL
+    )
+    """)
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS expenses(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        title TEXT,
+        amount REAL,
+        category TEXT,
+        date TEXT
+    )
+    """)
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
+
+
+@app.route("/")
 def home():
-    edit_index = request.args.get("edit")
-    search = request.args.get("search", "").lower()
+    if "user_id" in session:
+        return redirect("/dashboard")
+    return redirect("/login")
 
-    expenses = []
 
-    with open(FILE_NAME, "r") as file:
-        reader = csv.reader(file)
-        next(reader)
-        for row in reader:
-            expenses.append(row)
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = ""
 
-    edit_data = None
+    if request.method == "POST":
+        username = request.form["username"]
+        email = request.form["email"]
+        password = generate_password_hash(request.form["password"])
 
-    if edit_index is not None:
-        edit_index = int(edit_index)
-        edit_data = expenses[edit_index]
+        conn = sqlite3.connect("database.db")
+        cur = conn.cursor()
+
+        try:
+            cur.execute(
+                "INSERT INTO users(username,email,password) VALUES(?,?,?)",
+                (username, email, password)
+            )
+            conn.commit()
+            conn.close()
+            return redirect("/login")
+        except:
+            conn.close()
+            error = "This email is already registered."
+
+        return render_template(
+            "register.html",
+            error=error,
+            old_name=username,
+            old_email=email
+        )
+
+    return render_template(
+        "register.html",
+        error="",
+        old_name="",
+        old_email=""
+    )
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = ""
+
+    if request.method == "POST":
+        email = request.form["email"]
+        password = request.form["password"]
+
+        conn = sqlite3.connect("database.db")
+        cur = conn.cursor()
+
+        cur.execute("SELECT * FROM users WHERE email=?", (email,))
+        user = cur.fetchone()
+
+        conn.close()
+
+        if user:
+            if check_password_hash(user[3], password):
+                session["user_id"] = user[0]
+                session["username"] = user[1]
+                return redirect("/dashboard")
+            else:
+                error = "Incorrect password. Try again."
+        else:
+            error = "No account found with this email."
+
+        return render_template(
+            "login.html",
+            error=error,
+            old_email=email
+        )
+
+    return render_template(
+        "login.html",
+        error="",
+        old_email=""
+    )
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    message = ""
+    error = ""
+
+    if request.method == "POST":
+        email = request.form["email"]
+        username = request.form["username"]
+        new_password = request.form["new_password"]
+        confirm_password = request.form["confirm_password"]
+
+        if new_password != confirm_password:
+            error = "Passwords do not match."
+
+        else:
+            conn = sqlite3.connect("database.db")
+            cur = conn.cursor()
+
+            cur.execute(
+                "SELECT * FROM users WHERE email=? AND username=?",
+                (email, username)
+            )
+
+            user = cur.fetchone()
+
+            if user:
+                hashed = generate_password_hash(new_password)
+
+                cur.execute(
+                    "UPDATE users SET password=? WHERE id=?",
+                    (hashed, user[0])
+                )
+
+                conn.commit()
+                message = "Password updated successfully."
+            else:
+                error = "Email and username do not match records."
+
+            conn.close()
+
+    return render_template(
+        "forgot_password.html",
+        message=message,
+        error=error
+    )
+
+
+@app.route("/dashboard", methods=["GET", "POST"])
+def dashboard():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    cur = conn.cursor()
 
     if request.method == "POST":
         title = request.form["title"]
         amount = request.form["amount"]
         category = request.form["category"]
         date = request.form["date"]
-        update_index = request.form["edit_index"]
 
-        if update_index == "":
-            with open(FILE_NAME, "a", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow([title, amount, category, date])
-        else:
-            update_index = int(update_index)
-            expenses[update_index] = [title, amount, category, date]
+        cur.execute("""
+        INSERT INTO expenses(user_id,title,amount,category,date)
+        VALUES(?,?,?,?,?)
+        """, (session["user_id"], title, amount, category, date))
 
-            with open(FILE_NAME, "w", newline="") as file:
-                writer = csv.writer(file)
-                writer.writerow(["Title", "Amount", "Category", "Date"])
-                writer.writerows(expenses)
+        conn.commit()
 
-        return redirect("/")
+    search = request.args.get("search", "").strip()
+    sort = request.args.get("sort", "latest")
 
-    total = 0
-    for row in expenses:
-        total += float(row[1])
+    query = """
+    SELECT * FROM expenses
+    WHERE user_id=? AND
+    (
+        title LIKE ?
+        OR category LIKE ?
+        OR date LIKE ?
+    )
+    """
 
-    filtered_expenses = []
+    if sort == "amount":
+        query += " ORDER BY amount DESC"
+    elif sort == "category":
+        query += " ORDER BY category ASC"
+    else:
+        query += " ORDER BY id DESC"
 
-    for row in expenses:
-        if search in row[0].lower() or search in row[2].lower():
-            filtered_expenses.append(row)
+    keyword = "%" + search + "%"
 
-    return render_template(
-        "index.html",
-        expenses=filtered_expenses,
-        edit_data=edit_data,
-        edit_index=edit_index,
-        total=total,
-        search=search
+    cur.execute(
+        query,
+        (
+            session["user_id"],
+            keyword,
+            keyword,
+            keyword
+        )
     )
 
-@app.route("/delete/<int:index>")
-def delete(index):
-    rows = []
+    expenses = cur.fetchall()
 
-    with open(FILE_NAME, "r") as file:
-        reader = csv.reader(file)
-        rows = list(reader)
+    conn.close()
 
-    del rows[index + 1]
+    return render_template(
+        "dashboard.html",
+        expenses=expenses,
+        username=session["username"],
+        search=search,
+        sort=sort
+    )
 
-    with open(FILE_NAME, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerows(rows)
 
-    return redirect("/")
+@app.route("/delete/<int:expense_id>")
+def delete(expense_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    cur = conn.cursor()
+
+    cur.execute(
+        "DELETE FROM expenses WHERE id=? AND user_id=?",
+        (expense_id, session["user_id"])
+    )
+
+    conn.commit()
+    conn.close()
+
+    return redirect("/dashboard")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/login")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
