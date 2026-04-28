@@ -68,19 +68,9 @@ def register():
             conn.close()
             error = "This email is already registered."
 
-        return render_template(
-            "register.html",
-            error=error,
-            old_name=username,
-            old_email=email
-        )
+        return render_template("register.html", error=error, old_name=username, old_email=email)
 
-    return render_template(
-        "register.html",
-        error="",
-        old_name="",
-        old_email=""
-    )
+    return render_template("register.html", error="", old_name="", old_email="")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -93,33 +83,22 @@ def login():
 
         conn = sqlite3.connect("database.db")
         cur = conn.cursor()
-
         cur.execute("SELECT * FROM users WHERE email=?", (email,))
         user = cur.fetchone()
-
         conn.close()
 
-        if user:
-            if check_password_hash(user[3], password):
-                session["user_id"] = user[0]
-                session["username"] = user[1]
-                return redirect("/dashboard")
-            else:
-                error = "Incorrect password. Try again."
+        if user and check_password_hash(user[3], password):
+            session["user_id"] = user[0]
+            session["username"] = user[1]
+            return redirect("/dashboard")
+        elif user:
+            error = "Incorrect password. Try again."
         else:
             error = "No account found with this email."
 
-        return render_template(
-            "login.html",
-            error=error,
-            old_email=email
-        )
+        return render_template("login.html", error=error, old_email=email)
 
-    return render_template(
-        "login.html",
-        error="",
-        old_email=""
-    )
+    return render_template("login.html", error="", old_email="")
 
 
 @app.route("/forgot-password", methods=["GET", "POST"])
@@ -135,26 +114,16 @@ def forgot_password():
 
         if new_password != confirm_password:
             error = "Passwords do not match."
-
         else:
             conn = sqlite3.connect("database.db")
             cur = conn.cursor()
 
-            cur.execute(
-                "SELECT * FROM users WHERE email=? AND username=?",
-                (email, username)
-            )
-
+            cur.execute("SELECT * FROM users WHERE email=? AND username=?", (email, username))
             user = cur.fetchone()
 
             if user:
                 hashed = generate_password_hash(new_password)
-
-                cur.execute(
-                    "UPDATE users SET password=? WHERE id=?",
-                    (hashed, user[0])
-                )
-
+                cur.execute("UPDATE users SET password=? WHERE id=?", (hashed, user[0]))
                 conn.commit()
                 message = "Password updated successfully."
             else:
@@ -162,11 +131,7 @@ def forgot_password():
 
             conn.close()
 
-    return render_template(
-        "forgot_password.html",
-        message=message,
-        error=error
-    )
+    return render_template("forgot_password.html", message=message, error=error)
 
 
 @app.route("/dashboard", methods=["GET", "POST"])
@@ -178,16 +143,16 @@ def dashboard():
     cur = conn.cursor()
 
     if request.method == "POST":
-        title = request.form["title"]
-        amount = request.form["amount"]
-        category = request.form["category"]
-        date = request.form["date"]
-
         cur.execute("""
         INSERT INTO expenses(user_id,title,amount,category,date)
         VALUES(?,?,?,?,?)
-        """, (session["user_id"], title, amount, category, date))
-
+        """, (
+            session["user_id"],
+            request.form["title"],
+            request.form["amount"],
+            request.form["category"],
+            request.form["date"]
+        ))
         conn.commit()
 
     search = request.args.get("search", "").strip()
@@ -196,11 +161,7 @@ def dashboard():
     query = """
     SELECT * FROM expenses
     WHERE user_id=? AND
-    (
-        title LIKE ?
-        OR category LIKE ?
-        OR date LIKE ?
-    )
+    (title LIKE ? OR category LIKE ? OR date LIKE ?)
     """
 
     if sort == "amount":
@@ -212,18 +173,14 @@ def dashboard():
 
     keyword = "%" + search + "%"
 
-    cur.execute(
-        query,
-        (
-            session["user_id"],
-            keyword,
-            keyword,
-            keyword
-        )
-    )
+    cur.execute(query, (
+        session["user_id"],
+        keyword,
+        keyword,
+        keyword
+    ))
 
     expenses = cur.fetchall()
-
     conn.close()
 
     return render_template(
@@ -233,6 +190,45 @@ def dashboard():
         search=search,
         sort=sort
     )
+
+
+@app.route("/edit/<int:expense_id>", methods=["GET", "POST"])
+def edit(expense_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    cur = conn.cursor()
+
+    if request.method == "POST":
+        cur.execute("""
+        UPDATE expenses
+        SET title=?, amount=?, category=?, date=?
+        WHERE id=? AND user_id=?
+        """, (
+            request.form["title"],
+            request.form["amount"],
+            request.form["category"],
+            request.form["date"],
+            expense_id,
+            session["user_id"]
+        ))
+        conn.commit()
+        conn.close()
+        return redirect("/dashboard")
+
+    cur.execute(
+        "SELECT * FROM expenses WHERE id=? AND user_id=?",
+        (expense_id, session["user_id"])
+    )
+
+    expense = cur.fetchone()
+    conn.close()
+
+    if not expense:
+        return redirect("/dashboard")
+
+    return render_template("edit.html", expense=expense)
 
 
 @app.route("/delete/<int:expense_id>")
