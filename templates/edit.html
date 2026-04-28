@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Edit Expense</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="auth-wrapper">
+<div class="auth-card">
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+
+<h1>Edit Expense</h1>
+<p class="subtitle">Update your record easily</p>
+
+<form method="POST">
+
+<input
+type="text"
+name="title"
+value="{{ expense[2] }}"
+placeholder="Expense Title"
+required>
+
+<input
+type="number"
+name="amount"
+value="{{ expense[3] }}"
+placeholder="Amount"
+required>
+
+<select name="category" required style="margin-bottom:16px;">
+
+<option value="Food" {% if expense[4]=='Food' %}selected{% endif %}>Food</option>
+
+<option value="Travel" {% if expense[4]=='Travel' %}selected{% endif %}>Travel</option>
+
+<option value="Shopping" {% if expense[4]=='Shopping' %}selected{% endif %}>Shopping</option>
+
+<option value="Bills" {% if expense[4]=='Bills' %}selected{% endif %}>Bills</option>
+
+<option value="Other" {% if expense[4]=='Other' %}selected{% endif %}>Other</option>
+
+</select>
+
+<input
+type="date"
+name="date"
+value="{{ expense[5] }}"
+required>
+
+<button type="submit">Update Expense</button>
+
+</form>
+
+<p class="small-text">Want to go back?</p>
+<a href="/dashboard" class="link-btn">Back to Dashboard</a>
+
+</div>
+</div>
+
+</body>
+</html>
