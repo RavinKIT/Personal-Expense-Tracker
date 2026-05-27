@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Add Expense{% endblock %}
+
+{% block content %}
+
+<div class="hero">
+<h1>Add New Expense</h1>
+<p>Track every rupee with discipline</p>
+</div>
+
+<div class="panel white-panel" style="max-width:650px; margin:auto;">
+
+<form method="POST" action="/add">
+
+<input type="text" name="title" placeholder="Expense Title" required>
+
+<input type="number" name="amount" placeholder="Amount" required>
+
+<select name="category" required>
+<option value="">Select Category</option>
+<option>Food</option>
+<option>Travel</option>
+<option>Shopping</option>
+<option>Bills</option>
+<option>Other</option>
+</select>
+
+<label style="font-size:14px; font-weight:600;">Select Date</label>
+
+<input type="date" name="date" required>
+
+<button type="submit">Add Expense</button>
+
+</form>
+
+</div>
+
+{% endblock %}

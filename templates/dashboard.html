@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="hero">
+    <h1>Welcome {{ username }}</h1>
+    <p>Manage your finances with clarity</p>
+</div>
+
+<div class="card-row">
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+            <div class="flip-front">Total Spent</div>
+            <div class="flip-back">₹{{ total_spent }}</div>
+        </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+            <div class="flip-front">This Month</div>
+            <div class="flip-back">₹{{ monthly_total }}</div>
+        </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+            <div class="flip-front">Top Category</div>
+            <div class="flip-back">{{ top_category }}</div>
+        </div>
+    </div>
+
+    <div class="flip-card" onclick="this.classList.toggle('flipped')">
+        <div class="flip-inner">
+            <div class="flip-front">Status</div>
+            <div class="flip-back">{{ status }}</div>
+        </div>
+    </div>
+
+</div>
+<!-- BUDGET TRACKER -->
+
+<div class="budget-card">
+
+    <div class="budget-header">
+
+        <div>
+            <h2>Budget Tracker</h2>
+            <p>Track your monthly spending</p>
+        </div>
+
+        {% if monthly_budget == 0 %}
+            <form action="/set_budget" method="POST">
+
+    <input type="number"
+           name="budget"
+           placeholder="Enter budget"
+           required
+           class="budget-input">
+
+    <button type="submit" class="budget-btn">
+        + Set Budget
+    </button>
+
+</form>
+        {% else %}
+            <form action="/set_budget" method="POST">
+
+    <input type="number"
+           name="budget"
+           placeholder="Edit budget"
+           required
+           class="budget-input">
+
+    <button type="submit" class="budget-btn">
+        Edit Budget
+    </button>
+
+</form>
+        {% endif %}
+
+    </div>
+
+    <div class="budget-amount">
+        ₹{{ monthly_total }} / ₹{{ monthly_budget }}
+    </div>
+
+    <div class="progress-bar">
+        <div class="progress-fill"
+             style="width: {{ budget_percent }}%;">
+        </div>
+    </div>
+
+    <div class="budget-footer">
+        <span>{{ budget_percent }}% used</span>
+        <span>Remaining: ₹{{ remaining_budget }}</span>
+    </div>
+
+</div>
+
+<!-- RECENT TRANSACTIONS -->
+
+<div class="recent-box">
+
+    <div class="recent-header">
+        <h2>Recent Transactions</h2>
+        <a href="/records" class="view-all">View All</a>
+    </div>
+
+    {% if recent_expenses %}
+
+        {% for expense in recent_expenses %}
+
+        <div class="recent-item">
+
+            <div class="recent-left">
+                <h4>{{ expense[0] }}</h4>
+                <p>{{ expense[2] }}</p>
+            </div>
+
+            <div class="recent-right">
+                ₹{{ expense[1] }}
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p class="empty-text">No transactions yet</p>
+
+    {% endif %}
+</div>
+{% endblock %}

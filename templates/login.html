@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="auth-wrapper">
+<div class="auth-card">
+
+<img src="{{ url_for('static', filename='logo.png') }}" class="logo">
+
+<h1>Expense Tracker</h1>
+<p class="subtitle">Secure Personal Finance Access</p>
+
+<form method="POST">
+
+<input
+type="email"
+name="email"
+placeholder="Email Address"
+value="{{ old_email }}"
+required>
+
+<div style="position:relative; width:100%;">
+
+<input
+type="password"
+name="password"
+id="password"
+placeholder="Password"
+required
+style="padding-right:50px;">
+
+<span
+onclick="togglePassword()"
+style="
+position:absolute;
+right:16px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+font-size:18px;
+user-select:none;">
+👁
+</span>
+
+</div>
+
+{% if error %}
+<p style="color:#dc2626; font-size:14px; text-align:left; margin-top:8px;">
+{{ error }}
+</p>
+{% endif %}
+
+<div style="text-align:right; margin:8px 0 14px 0;">
+<a href="/forgot-password"
+style="font-size:14px; color:#2563eb; text-decoration:none;">
+Forgot Password?
+</a>
+</div>
+
+<button type="submit">Login</button>
+
+</form>
+
+<p class="small-text">Don't have an account?</p>
+<a href="/register" class="link-btn">Create Account</a>
+
+</div>
+</div>
+
+<script>
+function togglePassword() {
+    let pwd = document.getElementById("password");
+
+    if (pwd.type === "password") {
+        pwd.type = "text";
+    } else {
+        pwd.type = "password";
+    }
+}
+</script>
+
+</body>
+</html>
