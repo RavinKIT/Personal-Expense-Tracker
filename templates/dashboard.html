@@ -11,32 +11,24 @@
 
 <div class="card-row">
 
-    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-        <div class="flip-inner">
-            <div class="flip-front">Total Spent</div>
-            <div class="flip-back">₹{{ total_spent }}</div>
-        </div>
+    <div class="stat-card">
+        <h3>Total Spent</h3>
+        <p>₹{{ total_spent }}</p>
     </div>
 
-    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-        <div class="flip-inner">
-            <div class="flip-front">This Month</div>
-            <div class="flip-back">₹{{ monthly_total }}</div>
-        </div>
+    <div class="stat-card">
+        <h3>This Month</h3>
+        <p>₹{{ monthly_total }}</p>
     </div>
 
-    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-        <div class="flip-inner">
-            <div class="flip-front">Top Category</div>
-            <div class="flip-back">{{ top_category }}</div>
-        </div>
+    <div class="stat-card">
+        <h3>Top Category</h3>
+        <p>{{ top_category }}</p>
     </div>
 
-    <div class="flip-card" onclick="this.classList.toggle('flipped')">
-        <div class="flip-inner">
-            <div class="flip-front">Status</div>
-            <div class="flip-back">{{ status }}</div>
-        </div>
+    <div class="stat-card">
+        <h3>Status</h3>
+        <p>{{ status }}</p>
     </div>
 
 </div>

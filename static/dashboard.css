@@ -76,17 +76,15 @@ body{
 ========================= */
 
 .card-row{
-    width:72%;
-    max-width:900px;
+    width:85%;
+    max-width:1100px;
     margin:28px auto;
 
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-
-    gap:16px;
+    display:flex;
     justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
 }
-
 .flip-card{
     height:85px;
     perspective:1000px;
@@ -523,4 +521,27 @@ th{
         transform:translateY(0);
     }
 }
+}
+.stat-card{
+    width:220px;
+    height:100px;
+    background:#fff;
+    border-radius:18px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.08);
+}
+
+.stat-card h3{
+    font-size:18px;
+    margin-bottom:8px;
+    color:#222;
+}
+
+.stat-card p{
+    font-size:22px;
+    font-weight:700;
+    color:#2563eb;
 }
